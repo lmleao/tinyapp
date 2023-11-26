@@ -12,10 +12,10 @@ const urlDatabase = {
 };
 
 const generateRandomString = () => {
-  let randomString = (Math.random() + 1).toString(36).substring(6);
+  let randomString = (Math.random() + 1).toString(36).substring(2, 8);
 
   while (urlDatabase[randomString]) {
-    randomString = (Math.random() + 1).toString(36).substring(6);
+    randomString = (Math.random() + 1).toString(36).substring(2, 8);
   }
 
   return randomString;
