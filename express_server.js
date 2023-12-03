@@ -19,11 +19,15 @@ app.use(cookieSession({
 let urlDatabase = {
   "b2xVn2": {
     longURL: "http://www.lighthouselabs.ca",
-    userID: "userRandomID"
+    userID: "userRandomID",
+    visits: [],
+    uniqueVisitors: [],
   },
   "9sm5xK": {
     longURL: "http://www.google.com",
-    userID: "userRandomID"
+    userID: "userRandomID",
+    visits: [],
+    uniqueVisitors:[],
   }
 };
 
@@ -133,7 +137,9 @@ app.get("/urls/:id", (req, res) => {
   const templateVars = {
     user: users[userID],
     id: shortURL,
-    longURL: userURLs[shortURL].longURL
+    longURL: userURLs[shortURL].longURL,
+    visits: userURLs[shortURL].visits,
+    uniqueVisitors: userURLs[shortURL].uniqueVisitors,
   };
   res.render("urls_show", templateVars);
 });
@@ -143,6 +149,15 @@ app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[shortURL].longURL;
 
   if (longURL) {
+    urlDatabase[shortURL].visits.push({
+      timestamp: new Date(),
+      visitorID: generateRandomString(),
+    });
+    const visitorID = req.session.visitor_id || generateRandomString();
+    if (!urlDatabase[shortURL].uniqueVisitors.includes(visitorID)) {
+      urlDatabase[shortURL].uniqueVisitors.push(visitorID);
+      req.session.visitor_id = visitorID;
+    }
     res.redirect(longURL);
   } else {
     res.status(404).send("<h1>URL Not Found</h1><p>The requested URL does not exist.</p>");
@@ -177,7 +192,9 @@ app.post("/urls", (req, res) => {
 
   urlDatabase[shortURL] = {
     longURL: longURL,
-    userID: req.session.user_id
+    userID: req.session.user_id,
+    visits: [],
+    uniqueVisitors: []
   };
   
   console.log(req.body); // Log the POST request body to the console
