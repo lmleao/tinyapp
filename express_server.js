@@ -9,8 +9,14 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 let urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": {
+    longURL: "http://www.lighthouselabs.ca",
+    userID: "userRandomID"
+  },
+  "9sm5xK": {
+    longURL: "http://www.google.com",
+    userID: "userRandomID"
+  }
 };
 
 const users = {
@@ -44,6 +50,16 @@ app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
+const urlsForUser = (id) => {
+  const userURLs = {};
+  for (const shortURL in urlDatabase) {
+    if (urlDatabase[shortURL].userID === id) {
+      userURLs[shortURL] = urlDatabase[shortURL];
+    }
+  }
+  return userURLs;
+};
+
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
@@ -53,9 +69,16 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
+  if (!req.cookies["user_id"]) {
+    return res.status(401).send("<h1>Unauthorized</h1><p>Please log in or register to see this page.</p>");
+  }
+
+  const userID = req.cookies["user_id"];
+  const userURLs = urlsForUser(userID);
+
   const templateVars = {
-    user: users[req.cookies["user_id"]],
-    urls: urlDatabase
+    user: users[userID],
+    urls: userURLs
   };
   res.render("urls_index", templateVars);
 });
@@ -70,17 +93,29 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.get("/urls/:id", (req, res) => {
+  if (!req.cookies("user_id")) {
+    return res.status(401).send("<h1>Unauthorized</h1><p>Please log in or register to see this page.</p>");
+  }
+
+  const userID = req.cookies["user_id"];
+  const shortURL = req.params.id;
+  const userURLs = urlsForUser(userID);
+
+  if (!userURLs[shortURL]) {
+    return res.status(403).send("<h1>Forbidden</h1><p>You do not have permission to access this URL.</p>");
+  }
+
   const templateVars = {
-    user: users[req.cookies["user_id"]],
-    id: req.params.id,
-    longURL: urlDatabase[req.params.id]
+    user: users[userID],
+    id: shortURL,
+    longURL: userURLs[shortURL].longURL
   };
   res.render("urls_show", templateVars);
 });
 
 app.get("/u/:id", (req, res) => {
   const shortURL = req.params.id;
-  const longURL = urlDatabase[shortURL];
+  const longURL = urlDatabase[shortURL].longURL;
 
   if (longURL) {
     res.redirect(longURL);
@@ -107,13 +142,13 @@ app.get("/login", (req, res) => {
 
 app.post("/urls", (req, res) => {
   if (!req.cookies["user_id"]) {
-    return res.status(403).send("You must be logged in to shorten URLs.");
+    return res.status(403).send("<h1>Forbidden</h1><p>Please log in or register to shorten URLs.</p>");
   }
 
   const longURL = req.body.longURL;
   const shortURL = generateRandomString();
 
-  urlDatabase[shortURL] = longURL;
+  urlDatabase[shortURL].longURL = longURL;
   
   console.log(req.body); // Log the POST request body to the console
 
@@ -121,25 +156,47 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/urls/:id/delete", (req, res) => {
+  const userID = req.cookies["user_id"];
+  
+  if (!userID) {
+    return res.status(401).send("<h1>Unauthorized</h1><p>Please log in to delete this URL.</p>");
+  }
+
   const idToDelete = req.params.id;
+  const userURLs = urlsForUser(userID);
+
+  if (!userURLs[idToDelete]) {
+    return res.status(403).send("<h1>Forbidden</h1><p>You do not have permission to delete this URL.");
+  }
 
   if (urlDatabase[idToDelete]) {
     delete urlDatabase[idToDelete];
     res.redirect("/urls");
   } else {
-    res.status(404).send("URL not found");
+    res.status(404).send("<h1>Not Found</h1><p>The requested URL does not exist.</p>");
   }
 });
 
 app.post("/urls/:id", (req, res) => {
+  const userID = req.cookies["user_id"];
+  
+  if (!userID) {
+    return res.status(401).send("<h1>Unauthorized</h1><p>Please log in to edit this URL.</p>");
+  }
+
   const idToUpdate = req.params.id;
   const newLongURL = req.body.newLongURL;
+  const userURLs = urlsForUser(userID);
+
+  if (!userURLs[idToUpdate]) {
+    return res.status(403).send("<h1>Forbidden</h1><p>You do not have permission to edit this URL.</p>");
+  }
 
   if (urlDatabase[idToUpdate]) {
-    urlDatabase[idToUpdate] = newLongURL;
+    urlDatabase[idToUpdate].longURL = newLongURL;
     res.redirect("/urls");
   } else {
-    res.status(404).send("URL not found");
+    res.status(404).send("<h1>Not Found</h1><p>The requested URL does not exist.</p>");
   }
 });
 
