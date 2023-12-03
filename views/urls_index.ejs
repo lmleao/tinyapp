@@ -33,7 +33,7 @@
           <% for (let id in urls) { %>
             <tr>
               <td><%= id %></td>
-              <td><%= urls[id] %></td>
+              <td><%= urls[id].longURL %></td>
               <td>
                 <form method="GET" action="/urls/<%= id %>">
                   <input type="hidden" name="_method" value="PUT">
@@ -49,6 +49,7 @@
             </tr>
           <% } %>
         </tbody>
+        <p><a href="/urls/new">Create a New Short Link</a></p>
       </table>
     </main>
     <!-- Bootstrap JS -->
