@@ -3,6 +3,7 @@ const app = express();
 const PORT = 8080; // default port 8080
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
+const getUserByEmail = require('./helpers');
 
 app.set("view engine", "ejs");
 
@@ -45,10 +46,6 @@ const generateRandomString = () => {
   }
 
   return randomString;
-};
-
-const getUserByEmail = (email) => {
-  return Object.values(users).find(user => user.email === email);
 };
 
 app.get("/", (req, res) => {
@@ -209,7 +206,7 @@ app.post("/login", (req, res) => {
   const userEmail = req.body.email;
   const userPassword = req.body.password;
 
-  const user = getUserByEmail(userEmail);
+  const user = getUserByEmail(userEmail, users);
 
   if (!user) {
     return res.status(403).send("Invalid email or password");
@@ -240,7 +237,7 @@ app.post("/register", (req, res) => {
     return res.status(400).send("Email and password cannot be empty");
   }
   
-  const existingUser = getUserByEmail(userEmail);
+  const existingUser = getUserByEmail(userEmail, users);
   if (existingUser) {
     return res.status(400).send("Email already registered");
   }
