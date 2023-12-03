@@ -3,11 +3,13 @@ const app = express();
 const PORT = 8080; // default port 8080
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
+const methodOverride = require('method-override');
 const getUserByEmail = require('./helpers');
 
 app.set("view engine", "ejs");
 
 app.use(express.urlencoded({ extended: true }));
+app.use(methodOverride('_method'));
 app.use(cookieSession({
   name: 'session',
   keys: ['s874bs', '834gfb', 'e9rht1'],
@@ -157,7 +159,7 @@ app.post("/urls", (req, res) => {
   res.redirect(`urls/${shortURL}`);
 });
 
-app.post("/urls/:id/delete", (req, res) => {
+app.delete("/urls/:id/delete", (req, res) => {
   const userID = req.session.user_id;
   
   if (!userID) {
@@ -179,7 +181,7 @@ app.post("/urls/:id/delete", (req, res) => {
   }
 });
 
-app.post("/urls/:id", (req, res) => {
+app.put("/urls/:id", (req, res) => {
   const userID = req.session.user_id;
   
   if (!userID) {
