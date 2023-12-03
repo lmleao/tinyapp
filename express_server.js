@@ -36,6 +36,10 @@ const generateRandomString = () => {
   return randomString;
 };
 
+const getUserByEmail = (email) => {
+  return Object.values(users).find(user => user.email === email);
+};
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -135,9 +139,19 @@ app.post("/logout", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  const userID = generateRandomString();
   const userEmail = req.body.email;
   const userPassword = req.body.password;
+
+  if (!userEmail || !userPassword) {
+    return res.status(400).send("Email and password cannot be empty");
+  }
+  
+  const existingUser = getUserByEmail(userEmail);
+  if (existingUser) {
+    return res.status(400).send("Email already registered");
+  }
+
+  const userID = generateRandomString();
 
   const newUser = {
     id: userID,
