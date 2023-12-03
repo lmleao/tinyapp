@@ -132,16 +132,28 @@ app.post("/urls/:id", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  let userEmail = req.body.email;
-  res.cookie("email", userEmail);
+  const userEmail = req.body.email;
+  const userPassword = req.body.password;
+
+  const user = getUserByEmail(userEmail);
+
+  if (!user) {
+    return res.status(403).send("Invalid email or password");
+  }
+
+  if (userPassword !== user.password) {
+    return res.status(403).send("Invalid email or password");
+  }
+
+  res.cookie("user_id", user.id);
 
   res.redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("email");
+  res.clearCookie("user_id");
 
-  res.redirect("/urls");
+  res.redirect("/login");
 });
 
 app.post("/register", (req, res) => {
