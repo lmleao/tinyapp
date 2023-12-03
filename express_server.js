@@ -1,13 +1,17 @@
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
-const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
 
 app.set("view engine", "ejs");
 
 app.use(express.urlencoded({ extended: true }));
-app.use(cookieParser());
+app.use(cookieSession({
+  name: 'session',
+  keys: ['s874bs', '834gfb', 'e9rht1'],
+  maxAge: 24 * 60 * 60 * 1000
+}));
 
 let urlDatabase = {
   "b2xVn2": {
@@ -70,11 +74,11 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  if (!req.cookies["user_id"]) {
+  if (!req.session.user_id) {
     return res.status(401).send("<h1>Unauthorized</h1><p>Please log in or register to see this page.</p>");
   }
 
-  const userID = req.cookies["user_id"];
+  const userID = req.session.user_id;
   const userURLs = urlsForUser(userID);
 
   const templateVars = {
@@ -85,20 +89,20 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  if (!req.cookies["user_id"]) {
+  if (!req.session.user_id) {
     return res.redirect("/login");
   }
 
-  const templateVars = { user: users[req.cookies["user_id"]] };
+  const templateVars = { user: users[req.session.user_id] };
   res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:id", (req, res) => {
-  if (!req.cookies("user_id")) {
+  if (!req.session.user_id) {
     return res.status(401).send("<h1>Unauthorized</h1><p>Please log in or register to see this page.</p>");
   }
 
-  const userID = req.cookies["user_id"];
+  const userID = req.session.user_id;
   const shortURL = req.params.id;
   const userURLs = urlsForUser(userID);
 
@@ -126,7 +130,7 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  if (req.cookies["user_id"]) {
+  if (req.session.user_id) {
     return res.redirect("/urls");
   }
   
@@ -134,7 +138,7 @@ app.get("/register", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  if (req.cookies["user_id"]) {
+  if (req.session.user_id) {
     return res.redirect("/urls");
   }
 
@@ -142,7 +146,7 @@ app.get("/login", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  if (!req.cookies["user_id"]) {
+  if (!req.session.user_id) {
     return res.status(403).send("<h1>Forbidden</h1><p>Please log in or register to shorten URLs.</p>");
   }
 
@@ -157,7 +161,7 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/urls/:id/delete", (req, res) => {
-  const userID = req.cookies["user_id"];
+  const userID = req.session.user_id;
   
   if (!userID) {
     return res.status(401).send("<h1>Unauthorized</h1><p>Please log in to delete this URL.</p>");
@@ -179,7 +183,7 @@ app.post("/urls/:id/delete", (req, res) => {
 });
 
 app.post("/urls/:id", (req, res) => {
-  const userID = req.cookies["user_id"];
+  const userID = req.session.user_id;
   
   if (!userID) {
     return res.status(401).send("<h1>Unauthorized</h1><p>Please log in to edit this URL.</p>");
