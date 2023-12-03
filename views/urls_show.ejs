@@ -37,6 +37,14 @@
             <button type="submit" class="btn btn-primary">Submit</button>
           </div>
         </form>
+        <h5 class="card-title">Visits</h5>
+        <ul>
+          <% for (const visit of visits) { %>
+            <li><%= visit.timestamp %> - <%= visit.visitor_id %></li>
+          <% } %>
+        </ul>
+        <p>Total Visits: <%= visits.length %></p>
+        <p>Unique Visitors: <%= uniqueVisitors.length %></p>
       </div>
     </div>
     <!-- Bootstrap JS -->
