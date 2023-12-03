@@ -55,14 +55,14 @@ const generateRandomString = () => {
 };
 
 app.get("/", (req, res) => {
-  console.log("Session in / route:", req.session);
+  //console.log("Session in / route:", req.session);
 
   if (!req.session.user_id) {
-    console.log("Redirecting to /login");
+    //console.log("Redirecting to /login");
     res.redirect("/login");
   } else {
     if (req.path === "/") {
-      console.log("Redirecting to /urls");
+      //console.log("Redirecting to /urls");
       res.redirect("/urls");
     } else {
       res.redirect(req.path);
@@ -90,7 +90,7 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  console.log("Session:", req.session);
+  //console.log("Session:", req.session);
 
   if (!users[req.session.user_id]) {
     return res.status(401).send("<h1>Unauthorized</h1><p>Please log in or register to see this page.</p>");
@@ -99,15 +99,15 @@ app.get("/urls", (req, res) => {
   const userID = req.session.user_id;
   const userURLs = urlsForUser(userID);
 
-  console.log("Users:", users);
-  console.log("UserID:", userID);
+  //console.log("Users:", users);
+  //console.log("UserID:", userID);
 
   const templateVars = {
     user: users[userID],
     urls: userURLs
   };
 
-  console.log("TemplateVars:", templateVars);
+  //console.log("TemplateVars:", templateVars);
 
   res.render("urls_index", templateVars);
 });
@@ -165,9 +165,9 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.get("/register", (req, res) => {
-  console.log("Reached GET /register route");
+  //console.log("Reached GET /register route");
   if (req.session.user_id) {
-    console.log("Redirecting to /urls");
+    //console.log("Redirecting to /urls");
     return res.redirect("/urls");
   }
   
@@ -251,28 +251,28 @@ app.post("/login", (req, res) => {
   const userEmail = req.body.email;
   const userPassword = req.body.password;
 
-  console.log("Attempting to log in with email:", userEmail);
+  //console.log("Attempting to log in with email:", userEmail);
 
   const user = getUserByEmail(userEmail, users);
 
   if (!user) {
-    console.log("Invalid email or password for email:", userEmail);
+    //console.log("Invalid email or password for email:", userEmail);
     return res.status(403).send("Invalid email or password");
   }
 
-  console.log("Stored hashed password:", user.password);
-  console.log("Provided password:", userPassword);
+  //console.log("Stored hashed password:", user.password);
+  //console.log("Provided password:", userPassword);
 
   const passwordMatch = bcrypt.compareSync(userPassword, user.password);
 
-  console.log("bcrypt.compareSync result:", passwordMatch);
+  //console.log("bcrypt.compareSync result:", passwordMatch);
 
   if (!passwordMatch) {
-    console.log("Invalid email or password for email:", userEmail);
+    //console.log("Invalid email or password for email:", userEmail);
     return res.status(403).send("Invalid email or password");
   }
 
-  console.log("Logged in user ID:", user.id);
+  //console.log("Logged in user ID:", user.id);
   req.session.user_id = user.id;
 
   res.redirect("/urls");
@@ -285,18 +285,18 @@ app.post("/logout", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  console.log("Register route reached");
+  //console.log("Register route reached");
   const userEmail = req.body.email;
   const userPassword = req.body.password;
 
   if (!userEmail || !userPassword) {
-    console.log("Email and password cannot be empty");
+    //console.log("Email and password cannot be empty");
     return res.status(400).send("Email and password cannot be empty");
   }
   
   const existingUser = getUserByEmail(userEmail, users);
   if (existingUser) {
-    console.log("Email already registered:", userEmail);
+    //console.log("Email already registered:", userEmail);
     return res.status(400).send("Email already registered");
   }
 
@@ -312,7 +312,7 @@ app.post("/register", (req, res) => {
 
   users[userID] = newUser;
 
-  console.log("Registered new user:", newUser);
+  //console.log("Registered new user:", newUser);
 
   req.session.user_id = userID;
 
