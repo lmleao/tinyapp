@@ -61,6 +61,10 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
+  if (!req.cookies["user_id"]) {
+    return res.redirect("/login");
+  }
+
   const templateVars = { user: users[req.cookies["user_id"]] };
   res.render("urls_new", templateVars);
 });
@@ -81,23 +85,31 @@ app.get("/u/:id", (req, res) => {
   if (longURL) {
     res.redirect(longURL);
   } else {
-    res.status(404).send("URL not found");
+    res.status(404).send("<h1>URL Not Found</h1><p>The requested URL does not exist.</p>");
   }
 });
 
 app.get("/register", (req, res) => {
-  const templateVars = { user: users[req.cookies["user_id"]] };
-
-  res.render("register", templateVars);
+  if (req.cookies["user_id"]) {
+    return res.redirect("/urls");
+  }
+  
+  res.render("register", { user: null });
 });
 
 app.get("/login", (req, res) => {
-  const templateVars = { user: users[req.cookies["user_id"]] };
+  if (req.cookies["user_id"]) {
+    return res.redirect("/urls");
+  }
 
-  res.render("login", templateVars);
+  res.render("login", { user: null });
 });
 
 app.post("/urls", (req, res) => {
+  if (!req.cookies["user_id"]) {
+    return res.status(403).send("You must be logged in to shorten URLs.");
+  }
+
   const longURL = req.body.longURL;
   const shortURL = generateRandomString();
 
