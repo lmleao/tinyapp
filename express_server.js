@@ -248,7 +248,7 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  req.session.destroy();
+  req.session = null;
   
   res.redirect("/login");
 });
