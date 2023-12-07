@@ -36,14 +36,12 @@
               <td><%= id %></td>
               <td><%= urls[id].longURL %></td>
               <td>
-                <form method="GET" action="/urls/<%= id %>">
-                  <input type="hidden" name="_method" value="PUT">
+                <form method="GET" action="/urls/<%= id %>?_method=PUT">
                   <button type="submit" class="btn btn-outline-primary">Edit</button>
                 </form>
               </td>
               <td>
-                <form method="POST" action="/urls/<%= id %>/delete">
-                  <input type="hidden" name="_method" value="DELETE">
+                <form method="POST" action="/urls/<%= id %>/delete?_method=DELETE">
                   <button type="submit" class="btn btn-outline-danger">Delete</button>
                 </form>
               </td>
