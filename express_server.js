@@ -4,7 +4,7 @@ const PORT = 8080;  //default port 8080
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
 const methodOverride = require('method-override');
-const { getUserByEmail, generateRandomString } = require('./helpers');
+const { getUserByEmail, generateRandomString, urlsForUser } = require('./helpers');
 
 app.set("view engine", "ejs");
 
@@ -42,16 +42,6 @@ let users = {
     email: "b@b.com",
     password: "5678",
   },
-};
-
-const urlsForUser = (id) => {
-  const userURLs = {};
-  for (const shortURL in urlDatabase) {
-    if (urlDatabase[shortURL].userID === id) {
-      userURLs[shortURL] = urlDatabase[shortURL];
-    }
-  }
-  return userURLs;
 };
 
 //GET Routes
@@ -100,6 +90,7 @@ app.get("/urls/:id", (req, res) => {
   const shortURL = req.params.id;
   const userURLs = urlsForUser(userID);
 
+  //Check if user owns URL
   if (!userURLs[shortURL]) {
     return res.status(403).send("<h1>Forbidden</h1><p>You do not have permission to access this URL.</p>");
   }
@@ -107,9 +98,7 @@ app.get("/urls/:id", (req, res) => {
   const templateVars = {
     user: users[userID],
     id: shortURL,
-    longURL: userURLs[shortURL].longURL,
-    //visits: userURLs[shortURL].visits,
-    //uniqueVisitors: userURLs[shortURL].uniqueVisitors,
+    longURL: userURLs[shortURL].longURL
   };
   res.render("urls_show", templateVars);
 });
@@ -119,15 +108,6 @@ app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[shortURL].longURL;
 
   if (longURL) {
-    //urlDatabase[shortURL].visits.push({
-    //  timestamp: new Date(),
-    //  visitorID: generateRandomString(),
-    //});
-    //const visitorID = req.session.visitor_id || generateRandomString();
-    //if (!urlDatabase[shortURL].uniqueVisitors.includes(visitorID)) {
-    //  urlDatabase[shortURL].uniqueVisitors.push(visitorID);
-    //  req.session.visitor_id = visitorID;
-    //}
     res.redirect(longURL);
   } else {
     res.status(404).send("<h1>URL Not Found</h1><p>The requested URL does not exist.</p>");
@@ -145,20 +125,12 @@ app.get("/register", (req, res) => {
 app.get("/login", (req, res) => {
   const templateVars = { user: null };
 
-  //Do the opposite??
   if (!req.session.user_id) {
     res.render("login", templateVars);
   } else {
     templateVars.user = users[req.session.user_id];
     return res.redirect("/urls");
   }
-
-  //if (req.session.user_id) {
-  //  templateVars.user = users[req.session.user_id];
-  //  return res.redirect("/urls");
-  //}
-//
-  //res.render("login", templateVars);
 });
 
 //POST routes
@@ -173,9 +145,7 @@ app.post("/urls", (req, res) => {
 
   urlDatabase[shortURL] = {
     longURL: longURL,
-    userID: req.session.user_id,
-    visits: [],
-    uniqueVisitors: []
+    userID: req.session.user_id
   };
 
   res.redirect(`urls/${shortURL}`);
@@ -191,10 +161,12 @@ app.delete("/urls/:id/delete", (req, res) => {
   const idToDelete = req.params.id;
   const userURLs = urlsForUser(userID);
 
+  //Check if user has permission to delete URL
   if (!userURLs[idToDelete]) {
     return res.status(403).send("<h1>Forbidden</h1><p>You do not have permission to delete this URL.");
   }
 
+  //Check if URL exists and delete it
   if (urlDatabase[idToDelete]) {
     delete urlDatabase[idToDelete];
     res.redirect("/urls");
@@ -214,10 +186,12 @@ app.put("/urls/:id", (req, res) => {
   const newLongURL = req.body.newLongURL;
   const userURLs = urlsForUser(userID);
 
+  //Check if user has permission to edit URL
   if (!userURLs[idToUpdate]) {
     return res.status(403).send("<h1>Forbidden</h1><p>You do not have permission to edit this URL.</p>");
   }
 
+  //Check if URL exists and edit it
   if (urlDatabase[idToUpdate]) {
     urlDatabase[idToUpdate].longURL = newLongURL;
     res.redirect("/urls");
@@ -232,12 +206,14 @@ app.post("/login", (req, res) => {
 
   const user = getUserByEmail(userEmail, users);
 
+  //Check if user is registered in database
   if (!user) {
     return res.status(403).send("Invalid email or password");
   }
 
   const passwordMatch = bcrypt.compareSync(userPassword, user.password);
 
+  //Check if passwords match
   if (!passwordMatch) {
     return res.status(403).send("Invalid email or password");
   }
@@ -257,10 +233,12 @@ app.post("/register", (req, res) => {
   const userEmail = req.body.email;
   const userPassword = req.body.password;
 
+  //Check if email and passoword fields have been filled
   if (!userEmail || !userPassword) {
     return res.status(400).send("Email and password cannot be empty");
   }
   
+  //Check if user already exists
   const existingUser = getUserByEmail(userEmail, users);
   if (existingUser) {
     return res.status(400).send("Email already registered");
