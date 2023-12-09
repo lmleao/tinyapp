@@ -4,7 +4,7 @@ const PORT = 8080;  //default port 8080
 const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
 const methodOverride = require('method-override');
-const { getUserByEmail, generateRandomString, urlsForUser } = require('./helpers');
+const { getUserByEmail, generateRandomString } = require('./helpers');
 
 app.set("view engine", "ejs");
 
@@ -42,6 +42,16 @@ let users = {
     email: "b@b.com",
     password: "5678",
   },
+};
+
+const urlsForUser = (id) => {
+  const userURLs = {};
+  for (const shortURL in urlDatabase) {
+    if (urlDatabase[shortURL].userID === id) {
+      userURLs[shortURL] = urlDatabase[shortURL];
+    }
+  }
+  return userURLs;
 };
 
 //GET Routes
